@@ -16,7 +16,7 @@ Loki is built around the idea of only indexing metadata about your logs: labels 
 5. Create clusters using the cluster type.
 6. If the addon is to be added to a running cluster, create an environment with the name "**loki-stack**" and choose this environment while deploying the application
 7. Verify that the application is running in Nirmata. 
-8. Access the Grafana dashboard on the exposed node port, the secret holds the credentials to access the application.
+8. Access the Grafana dashboard on the exposed node port, the secret "grafana" holds the credentials to access the application.
 
 ### Who do I talk to?
 For issues, contact support@nirmata.com
