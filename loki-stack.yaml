@@ -1,0 +1,1363 @@
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki-promtail"
+  labels:
+    app: "promtail"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "promtail-0.24.0"
+    release: "loki"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "loki-promtail"
+subjects:
+- kind: "ServiceAccount"
+  name: "loki-promtail"
+
+---
+apiVersion: "v1"
+kind: "ServiceAccount"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "loki-0.31.0"
+    release: "loki"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  annotations: {}
+  name: "grafana-np"
+  labels:
+    app.kubernetes.io/name: "loki-cat-2"
+    app.kubernetes.io/component: "deployment.grafana"
+spec:
+  externalIPs: []
+  healthCheckNodePort: 0
+  loadBalancerSourceRanges: []
+  type: "NodePort"
+  selector:
+    app.kubernetes.io/component: "deployment.grafana"
+  ports:
+  - name: "np"
+    port: 3000
+    protocol: "TCP"
+    targetPort: 3000
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  grafana.ini: "[analytics]\ncheck_for_updates = true\n[grafana_net]\nurl = https://grafana.net\n\
+    [log]\nmode = console\n[paths]\ndata = /var/lib/grafana/data\nlogs = /var/log/grafana\n\
+    plugins = /var/lib/grafana/plugins\nprovisioning = /etc/grafana/provisioning\n"
+binaryData: {}
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki-promtail"
+  labels:
+    app: "promtail"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "promtail-0.24.0"
+    release: "loki"
+rules:
+- apiGroups:
+  - "extensions"
+  nonResourceURLs: []
+  resourceNames:
+  - "loki-promtail"
+  resources:
+  - "podsecuritypolicies"
+  verbs:
+  - "use"
+
+---
+kind: "Secret"
+apiVersion: "v1"
+data:
+  loki.yaml: "YXV0aF9lbmFibGVkOiBmYWxzZQpjaHVua19zdG9yZV9jb25maWc6CiAgbWF4X2xvb2tfYmFja19wZXJpb2Q6IDBzCmluZ2VzdGVyOgogIGNodW5rX2Jsb2NrX3NpemU6IDI2MjE0NAogIGNodW5rX2lkbGVfcGVyaW9kOiAzbQogIGNodW5rX3JldGFpbl9wZXJpb2Q6IDFtCiAgbGlmZWN5Y2xlcjoKICAgIHJpbmc6CiAgICAgIGt2c3RvcmU6CiAgICAgICAgc3RvcmU6IGlubWVtb3J5CiAgICAgIHJlcGxpY2F0aW9uX2ZhY3RvcjogMQogIG1heF90cmFuc2Zlcl9yZXRyaWVzOiAwCmxpbWl0c19jb25maWc6CiAgZW5mb3JjZV9tZXRyaWNfbmFtZTogZmFsc2UKICByZWplY3Rfb2xkX3NhbXBsZXM6IHRydWUKICByZWplY3Rfb2xkX3NhbXBsZXNfbWF4X2FnZTogMTY4aApzY2hlbWFfY29uZmlnOgogIGNvbmZpZ3M6CiAgLSBmcm9tOiAiMjAxOC0wNC0xNSIKICAgIGluZGV4OgogICAgICBwZXJpb2Q6IDE2OGgKICAgICAgcHJlZml4OiBpbmRleF8KICAgIG9iamVjdF9zdG9yZTogZmlsZXN5c3RlbQogICAgc2NoZW1hOiB2OQogICAgc3RvcmU6IGJvbHRkYgpzZXJ2ZXI6CiAgaHR0cF9saXN0ZW5fcG9ydDogMzEwMApzdG9yYWdlX2NvbmZpZzoKICBib2x0ZGI6CiAgICBkaXJlY3Rvcnk6IC9kYXRhL2xva2kvaW5kZXgKICBmaWxlc3lzdGVtOgogICAgZGlyZWN0b3J5OiAvZGF0YS9sb2tpL2NodW5rcwp0YWJsZV9tYW5hZ2VyOgogIHJldGVudGlvbl9kZWxldGVzX2VuYWJsZWQ6IGZhbHNlCiAgcmV0ZW50aW9uX3BlcmlvZDogMHMK"
+type: "Opaque"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "loki-0.31.0"
+    release: "loki"
+
+---
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "loki-0.31.0"
+    app.kubernetes.io/component: "statefulset.loki"
+spec:
+  podManagementPolicy: "OrderedReady"
+  replicas: 1
+  serviceName: "loki-headless"
+  selector:
+    matchLabels:
+      app: "loki"
+      release: "loki"
+      app.kubernetes.io/component: "statefulset.loki"
+    matchExpressions: []
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        checksum/config: "bda5cbda7327a5ac6968daf147ac1dfd1eb5e803a2390521aafb70339e2ba94d"
+        prometheus.io/port: "http-metrics"
+      labels:
+        app: "loki"
+        name: "loki"
+        release: "loki"
+        app.kubernetes.io/component: "statefulset.loki"
+    spec:
+      terminationGracePeriodSeconds: 4800
+      nodeSelector: {}
+      serviceAccountName: "loki"
+      volumes:
+      - name: "config"
+        secret:
+          secretName: "loki"
+      - name: "storage"
+        emptyDir: {}
+      containers:
+      - name: "loki"
+        image: "grafana/loki:1.6.0"
+        command: []
+        args:
+        - "-config.file=/etc/loki/loki.yaml"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "http-metrics"
+          containerPort: 3100
+          protocol: "TCP"
+        volumeMounts:
+        - name: "config"
+          mountPath: "/etc/loki"
+        - name: "storage"
+          mountPath: "/data"
+        livenessProbe:
+          initialDelaySeconds: 45
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: "/ready"
+            port: "http-metrics"
+        readinessProbe:
+          initialDelaySeconds: 45
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: "/ready"
+            port: "http-metrics"
+        securityContext:
+          readOnlyRootFilesystem: true
+        resources:
+          limits: {}
+          requests: {}
+      securityContext:
+        runAsUser: 10001
+        runAsNonRoot: true
+        fsGroup: 10001
+        runAsGroup: 10001
+        supplementalGroups: []
+      affinity: {}
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      partition: 0
+
+---
+kind: "Secret"
+apiVersion: "v1"
+data:
+  ldap-toml: ""
+  admin-password: "UmpBc1A2OURSVGVQaHpvRHdMWko1WGtFMUc4T0tJMTlvRVZXd3VNeA=="
+  admin-user: "YWRtaW4="
+type: "Opaque"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+rules:
+- apiGroups:
+  - ""
+  nonResourceURLs: []
+  resourceNames: []
+  resources:
+  - "configmaps"
+  - "secrets"
+  verbs:
+  - "get"
+  - "watch"
+  - "list"
+metadata:
+  annotations: {}
+  name: "grafana-clusterrole"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki-headless"
+  labels:
+    app: "loki"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    variant: "headless"
+    heritage: "Tiller"
+    chart: "loki-0.31.0"
+    app.kubernetes.io/component: "statefulset.loki"
+spec:
+  clusterIP: "None"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  type: "ClusterIP"
+  selector:
+    app: "loki"
+    release: "loki"
+    app.kubernetes.io/component: "statefulset.loki"
+  ports:
+  - name: "http-metrics"
+    port: 3100
+    protocol: "TCP"
+    targetPort: "http-metrics"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  provider.yaml: "apiVersion: 1\nproviders:\n- name: 'sidecarProvider'\n  orgId: 1\n\
+    \  folder: ''\n  type: file\n  disableDeletion: false\n  options:\n    path: /tmp/dashboards"
+binaryData: {}
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana-config-dashboards"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+
+---
+apiVersion: "v1"
+kind: "ServiceAccount"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki-promtail"
+  labels:
+    app: "promtail"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "promtail-0.24.0"
+    release: "loki"
+
+---
+metadata:
+  name: "loki"
+  labels:
+    app: "loki"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "loki-0.31.0"
+apiVersion: "policy/v1beta1"
+kind: "PodSecurityPolicy"
+spec:
+  privileged: false
+  runAsUser:
+    rule: "MustRunAsNonRoot"
+  seLinux:
+    rule: "RunAsAny"
+  fsGroup:
+    ranges:
+    - min: 1
+      max: 65535
+    rule: "MustRunAs"
+  hostNetwork: false
+  volumes:
+  - "configMap"
+  - "emptyDir"
+  - "persistentVolumeClaim"
+  - "secret"
+  - "projected"
+  - "downwardAPI"
+  hostIPC: false
+  supplementalGroups:
+    ranges:
+    - min: 1
+      max: 65535
+    rule: "MustRunAs"
+  requiredDropCapabilities:
+  - "ALL"
+  allowPrivilegeEscalation: false
+  hostPID: false
+  readOnlyRootFilesystem: true
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  loki-stack-datasource.yaml: "apiVersion: 1\ndatasources:\n- name: Loki\n  type:\
+    \ loki\n  access: proxy\n  url: http://loki:3100\n  version: 1"
+binaryData: {}
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki-stack"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "loki-stack-0.40.0"
+    grafana_datasource: "1"
+
+---
+apiVersion: "v1"
+kind: "ServiceAccount"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+
+---
+kind: "Deployment"
+apiVersion: "apps/v1"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "grafana-3.8.19"
+    app.kubernetes.io/component: "deployment.grafana"
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: "grafana"
+      release: "loki"
+      app.kubernetes.io/component: "deployment.grafana"
+    matchExpressions: []
+  strategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      annotations:
+        checksum/dashboards-json-config: "01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b"
+        checksum/secret: "4c0ed8b3f01650defded6f5568f727aebde0ea1a4acf293ded176bba9b218a3b"
+        checksum/sc-dashboard-provider-config: "bd980c97251ce6bcf8a2e5facd4d4de8276a69eedf2b86297161c148833fa3fa"
+        checksum/config: "fad7a7ba95034bf33bf329ddd4fe726bb0dccf1896417b306e60191e6fef9b08"
+      labels:
+        app: "grafana"
+        release: "loki"
+        app.kubernetes.io/component: "deployment.grafana"
+    spec:
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "grafana"
+      volumes:
+      - name: "config"
+        configMap:
+          name: "grafana"
+      - name: "ldap"
+        secret:
+          secretName: "grafana"
+          items:
+          - key: "ldap-toml"
+            path: "ldap.toml"
+      - name: "storage"
+        emptyDir: {}
+      - name: "sc-dashboard-volume"
+        emptyDir: {}
+      - name: "sc-dashboard-provider"
+        configMap:
+          name: "grafana-config-dashboards"
+      - name: "sc-datasources-volume"
+        emptyDir: {}
+      - name: "pv"
+        nfs:
+          path: "/nfs"
+          server: "anu"
+          readOnly: false
+      containers:
+      - name: "grafana-sc-dashboard"
+        image: "kiwigrid/k8s-sidecar:0.1.20"
+        command: []
+        args: []
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "LABEL"
+          value: "grafana_dashboard"
+        - name: "FOLDER"
+          value: "/tmp/dashboards"
+        - name: "RESOURCE"
+          value: "both"
+        volumeMounts:
+        - name: "sc-dashboard-volume"
+          mountPath: "/tmp/dashboards"
+        resources:
+          limits: {}
+          requests: {}
+      - name: "grafana"
+        image: "grafana/grafana:6.7.0"
+        command: []
+        args: []
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "service"
+          containerPort: 80
+          protocol: "TCP"
+        - name: "grafana"
+          containerPort: 3000
+          protocol: "TCP"
+        env:
+        - name: "GF_SECURITY_ADMIN_USER"
+          valueFrom:
+            secretKeyRef:
+              name: "grafana"
+              key: "admin-user"
+        - name: "GF_SECURITY_ADMIN_PASSWORD"
+          valueFrom:
+            secretKeyRef:
+              name: "grafana"
+              key: "admin-password"
+        volumeMounts:
+        - name: "config"
+          mountPath: "/etc/grafana/grafana.ini"
+          subPath: "grafana.ini"
+        - name: "ldap"
+          mountPath: "/etc/grafana/ldap.toml"
+          subPath: "ldap.toml"
+        - name: "storage"
+          mountPath: "/var/lib/grafana"
+        - name: "sc-dashboard-volume"
+          mountPath: "/tmp/dashboards"
+        - name: "sc-dashboard-provider"
+          mountPath: "/etc/grafana/provisioning/dashboards/sc-dashboardproviders.yaml"
+          subPath: "provider.yaml"
+        - name: "sc-datasources-volume"
+          mountPath: "/etc/grafana/provisioning/datasources"
+        livenessProbe:
+          initialDelaySeconds: 60
+          timeoutSeconds: 30
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 10
+          httpGet:
+            path: "/api/health"
+            port: 3000
+        readinessProbe:
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 3
+          httpGet:
+            path: "/api/health"
+            port: 3000
+        resources:
+          limits: {}
+          requests: {}
+      securityContext:
+        runAsUser: 472
+        fsGroup: 472
+        supplementalGroups: []
+      initContainers:
+      - name: "grafana-sc-datasources"
+        image: "kiwigrid/k8s-sidecar:0.1.20"
+        command: []
+        args: []
+        imagePullPolicy: "IfNotPresent"
+        env:
+        - name: "METHOD"
+          value: "LIST"
+        - name: "LABEL"
+          value: "grafana_datasource"
+        - name: "FOLDER"
+          value: "/etc/grafana/provisioning/datasources"
+        - name: "RESOURCE"
+          value: "both"
+        volumeMounts:
+        - name: "sc-datasources-volume"
+          mountPath: "/etc/grafana/provisioning/datasources"
+        resources:
+          limits: {}
+          requests: {}
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  promtail.yaml: "client:\n  backoff_config:\n    max_period: 5s\n    max_retries:\
+    \ 20\n    min_period: 100ms\n  batchsize: 102400\n  batchwait: 1s\n  external_labels:\
+    \ {}\n  timeout: 10s\npositions:\n  filename: /run/promtail/positions.yaml\nserver:\n\
+    \  http_listen_port: 3101\ntarget_config:\n  sync_period: 10s\n\nscrape_configs:\n\
+    - job_name: kubernetes-pods-name\n  pipeline_stages:\n    - docker: {}\n    \n\
+    \  kubernetes_sd_configs:\n  - role: pod\n  relabel_configs:\n  - source_labels:\n\
+    \    - __meta_kubernetes_pod_label_name\n    target_label: __service__\n  - source_labels:\n\
+    \    - __meta_kubernetes_pod_node_name\n    target_label: __host__\n  - action:\
+    \ drop\n    regex: ''\n    source_labels:\n    - __service__\n  - action: labelmap\n\
+    \    regex: __meta_kubernetes_pod_label_(.+)\n  - action: replace\n    replacement:\
+    \ $1\n    separator: /\n    source_labels:\n    - __meta_kubernetes_namespace\n\
+    \    - __service__\n    target_label: job\n  - action: replace\n    source_labels:\n\
+    \    - __meta_kubernetes_namespace\n    target_label: namespace\n  - action: replace\n\
+    \    source_labels:\n    - __meta_kubernetes_pod_name\n    target_label: pod\n\
+    \  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: container\n  - replacement: /var/log/pods/*$1/*.log\n    separator:\
+    \ /\n    source_labels:\n    - __meta_kubernetes_pod_uid\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: __path__\n- job_name: kubernetes-pods-app\n  pipeline_stages:\n\
+    \    - docker: {}\n    \n  kubernetes_sd_configs:\n  - role: pod\n  relabel_configs:\n\
+    \  - action: drop\n    regex: .+\n    source_labels:\n    - __meta_kubernetes_pod_label_name\n\
+    \  - source_labels:\n    - __meta_kubernetes_pod_label_app\n    target_label:\
+    \ __service__\n  - source_labels:\n    - __meta_kubernetes_pod_node_name\n   \
+    \ target_label: __host__\n  - action: drop\n    regex: ''\n    source_labels:\n\
+    \    - __service__\n  - action: labelmap\n    regex: __meta_kubernetes_pod_label_(.+)\n\
+    \  - action: replace\n    replacement: $1\n    separator: /\n    source_labels:\n\
+    \    - __meta_kubernetes_namespace\n    - __service__\n    target_label: job\n\
+    \  - action: replace\n    source_labels:\n    - __meta_kubernetes_namespace\n\
+    \    target_label: namespace\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_name\n\
+    \    target_label: pod\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: container\n  - replacement: /var/log/pods/*$1/*.log\n    separator:\
+    \ /\n    source_labels:\n    - __meta_kubernetes_pod_uid\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: __path__\n- job_name: kubernetes-pods-direct-controllers\n\
+    \  pipeline_stages:\n    - docker: {}\n    \n  kubernetes_sd_configs:\n  - role:\
+    \ pod\n  relabel_configs:\n  - action: drop\n    regex: .+\n    separator: ''\n\
+    \    source_labels:\n    - __meta_kubernetes_pod_label_name\n    - __meta_kubernetes_pod_label_app\n\
+    \  - action: drop\n    regex: '[0-9a-z-.]+-[0-9a-f]{8,10}'\n    source_labels:\n\
+    \    - __meta_kubernetes_pod_controller_name\n  - source_labels:\n    - __meta_kubernetes_pod_controller_name\n\
+    \    target_label: __service__\n  - source_labels:\n    - __meta_kubernetes_pod_node_name\n\
+    \    target_label: __host__\n  - action: drop\n    regex: ''\n    source_labels:\n\
+    \    - __service__\n  - action: labelmap\n    regex: __meta_kubernetes_pod_label_(.+)\n\
+    \  - action: replace\n    replacement: $1\n    separator: /\n    source_labels:\n\
+    \    - __meta_kubernetes_namespace\n    - __service__\n    target_label: job\n\
+    \  - action: replace\n    source_labels:\n    - __meta_kubernetes_namespace\n\
+    \    target_label: namespace\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_name\n\
+    \    target_label: pod\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: container\n  - replacement: /var/log/pods/*$1/*.log\n    separator:\
+    \ /\n    source_labels:\n    - __meta_kubernetes_pod_uid\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: __path__\n- job_name: kubernetes-pods-indirect-controller\n\
+    \  pipeline_stages:\n    - docker: {}\n    \n  kubernetes_sd_configs:\n  - role:\
+    \ pod\n  relabel_configs:\n  - action: drop\n    regex: .+\n    separator: ''\n\
+    \    source_labels:\n    - __meta_kubernetes_pod_label_name\n    - __meta_kubernetes_pod_label_app\n\
+    \  - action: keep\n    regex: '[0-9a-z-.]+-[0-9a-f]{8,10}'\n    source_labels:\n\
+    \    - __meta_kubernetes_pod_controller_name\n  - action: replace\n    regex:\
+    \ '([0-9a-z-.]+)-[0-9a-f]{8,10}'\n    source_labels:\n    - __meta_kubernetes_pod_controller_name\n\
+    \    target_label: __service__\n  - source_labels:\n    - __meta_kubernetes_pod_node_name\n\
+    \    target_label: __host__\n  - action: drop\n    regex: ''\n    source_labels:\n\
+    \    - __service__\n  - action: labelmap\n    regex: __meta_kubernetes_pod_label_(.+)\n\
+    \  - action: replace\n    replacement: $1\n    separator: /\n    source_labels:\n\
+    \    - __meta_kubernetes_namespace\n    - __service__\n    target_label: job\n\
+    \  - action: replace\n    source_labels:\n    - __meta_kubernetes_namespace\n\
+    \    target_label: namespace\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_name\n\
+    \    target_label: pod\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: container\n  - replacement: /var/log/pods/*$1/*.log\n    separator:\
+    \ /\n    source_labels:\n    - __meta_kubernetes_pod_uid\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: __path__\n- job_name: kubernetes-pods-static\n  pipeline_stages:\n\
+    \    - docker: {}\n    \n  kubernetes_sd_configs:\n  - role: pod\n  relabel_configs:\n\
+    \  - action: drop\n    regex: ''\n    source_labels:\n    - __meta_kubernetes_pod_annotation_kubernetes_io_config_mirror\n\
+    \  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_label_component\n\
+    \    target_label: __service__\n  - source_labels:\n    - __meta_kubernetes_pod_node_name\n\
+    \    target_label: __host__\n  - action: drop\n    regex: ''\n    source_labels:\n\
+    \    - __service__\n  - action: labelmap\n    regex: __meta_kubernetes_pod_label_(.+)\n\
+    \  - action: replace\n    replacement: $1\n    separator: /\n    source_labels:\n\
+    \    - __meta_kubernetes_namespace\n    - __service__\n    target_label: job\n\
+    \  - action: replace\n    source_labels:\n    - __meta_kubernetes_namespace\n\
+    \    target_label: namespace\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_name\n\
+    \    target_label: pod\n  - action: replace\n    source_labels:\n    - __meta_kubernetes_pod_container_name\n\
+    \    target_label: container\n  - replacement: /var/log/pods/*$1/*.log\n    separator:\
+    \ /\n    source_labels:\n    - __meta_kubernetes_pod_annotation_kubernetes_io_config_mirror\n\
+    \    - __meta_kubernetes_pod_container_name\n    target_label: __path__\n"
+binaryData: {}
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki-promtail"
+  labels:
+    app: "promtail"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "promtail-0.24.0"
+    release: "loki"
+
+---
+kind: "ConfigMap"
+apiVersion: "v1"
+data:
+  loki-dashboard.json: "{\n  \"annotations\": {\n    \"list\": [\n      {\n      \
+    \  \"builtIn\": 1,\n        \"datasource\": \"-- Grafana --\",\n        \"enable\"\
+    : true,\n        \"hide\": true,\n        \"iconColor\": \"rgba(0, 211, 255, 1)\"\
+    ,\n        \"name\": \"Annotations & Alerts\",\n        \"type\": \"dashboard\"\
+    \n      }\n    ]\n  },\n  \"description\": \"Universal and flexible dashboard\
+    \ for logging\",\n  \"editable\": true,\n  \"gnetId\": 12611,\n  \"graphTooltip\"\
+    : 0,\n  \"id\": 1,\n  \"iteration\": 1599552015034,\n  \"links\": [],\n  \"panels\"\
+    : [\n    {\n      \"cacheTimeout\": null,\n      \"colorBackground\": false,\n\
+    \      \"colorPostfix\": true,\n      \"colorValue\": true,\n      \"colors\"\
+    : [\n        \"rgb(31, 255, 7)\",\n        \"rgb(31, 255, 7)\",\n        \"rgb(31,\
+    \ 255, 7)\"\n      ],\n      \"datasource\": \"Loki\",\n      \"description\"\
+    : \"Total  Count of log lines in the specified time range\",\n      \"fieldConfig\"\
+    : {\n        \"defaults\": {\n          \"custom\": {}\n        },\n        \"\
+    overrides\": []\n      },\n      \"format\": \"short\",\n      \"gauge\": {\n\
+    \        \"maxValue\": 100,\n        \"minValue\": 0,\n        \"show\": false,\n\
+    \        \"thresholdLabels\": false,\n        \"thresholdMarkers\": true\n   \
+    \   },\n      \"gridPos\": {\n        \"h\": 3,\n        \"w\": 12,\n        \"\
+    x\": 0,\n        \"y\": 0\n      },\n      \"id\": 11,\n      \"interval\": null,\n\
+    \      \"links\": [],\n      \"mappingType\": 1,\n      \"mappingTypes\": [\n\
+    \        {\n          \"$$hashKey\": \"object:65\",\n          \"name\": \"value\
+    \ to text\",\n          \"value\": 1\n        },\n        {\n          \"$$hashKey\"\
+    : \"object:66\",\n          \"name\": \"range to text\",\n          \"value\"\
+    : 2\n        }\n      ],\n      \"maxDataPoints\": 100,\n      \"nullPointMode\"\
+    : \"connected\",\n      \"nullText\": null,\n      \"pluginVersion\": \"6.4.3\"\
+    ,\n      \"postfix\": \" lines\",\n      \"postfixFontSize\": \"50%\",\n     \
+    \ \"prefix\": \"\",\n      \"prefixFontSize\": \"50%\",\n      \"rangeMaps\":\
+    \ [\n        {\n          \"from\": \"null\",\n          \"text\": \"N/A\",\n\
+    \          \"to\": \"null\"\n        }\n      ],\n      \"sparkline\": {\n   \
+    \     \"fillColor\": \"rgb(0, 82, 0)\",\n        \"full\": false,\n        \"\
+    lineColor\": \"rgb(31, 255, 7)\",\n        \"show\": true,\n        \"ymax\":\
+    \ null,\n        \"ymin\": null\n      },\n      \"tableColumn\": \"{}\",\n  \
+    \    \"targets\": [\n        {\n          \"expr\": \"sum(count_over_time(({container_name=\\\
+    \"$container_name\\\", stream=~\\\"$stream\\\", pod_name=~\\\"$pod_name\\\"})[$__interval]))\"\
+    ,\n          \"hide\": false,\n          \"refId\": \"A\"\n        }\n      ],\n\
+    \      \"thresholds\": \"10,50\",\n      \"timeFrom\": null,\n      \"timeShift\"\
+    : null,\n      \"title\": \"Total  Count of logs\",\n      \"type\": \"singlestat\"\
+    ,\n      \"valueFontSize\": \"70%\",\n      \"valueMaps\": [\n        {\n    \
+    \      \"$$hashKey\": \"object:68\",\n          \"op\": \"=\",\n          \"text\"\
+    : \"0\",\n          \"value\": \"null\"\n        }\n      ],\n      \"valueName\"\
+    : \"total\"\n    },\n    {\n      \"cacheTimeout\": null,\n      \"colorBackground\"\
+    : false,\n      \"colorPostfix\": true,\n      \"colorPrefix\": false,\n     \
+    \ \"colorValue\": true,\n      \"colors\": [\n        \"rgb(222, 15, 43)\",\n\
+    \        \"rgb(222, 15, 43)\",\n        \"rgb(222, 15, 43)\"\n      ],\n     \
+    \ \"datasource\": \"Loki\",\n      \"description\": \"Total Count: of $searchable_pattern\
+    \ in the specified time range\",\n      \"fieldConfig\": {\n        \"defaults\"\
+    : {\n          \"custom\": {}\n        },\n        \"overrides\": []\n      },\n\
+    \      \"format\": \"short\",\n      \"gauge\": {\n        \"maxValue\": 100,\n\
+    \        \"minValue\": 0,\n        \"show\": false,\n        \"thresholdLabels\"\
+    : false,\n        \"thresholdMarkers\": true\n      },\n      \"gridPos\": {\n\
+    \        \"h\": 3,\n        \"w\": 12,\n        \"x\": 12,\n        \"y\": 0\n\
+    \      },\n      \"id\": 6,\n      \"interval\": null,\n      \"links\": [],\n\
+    \      \"mappingType\": 1,\n      \"mappingTypes\": [\n        {\n          \"\
+    $$hashKey\": \"object:1630\",\n          \"name\": \"value to text\",\n      \
+    \    \"value\": 1\n        },\n        {\n          \"$$hashKey\": \"object:1631\"\
+    ,\n          \"name\": \"range to text\",\n          \"value\": 2\n        }\n\
+    \      ],\n      \"maxDataPoints\": 100,\n      \"nullPointMode\": \"connected\"\
+    ,\n      \"nullText\": null,\n      \"pluginVersion\": \"6.4.3\",\n      \"postfix\"\
+    : \" \\\"$searchable_pattern\\\"\",\n      \"postfixFontSize\": \"50%\",\n   \
+    \   \"prefix\": \"\",\n      \"prefixFontSize\": \"50%\",\n      \"rangeMaps\"\
+    : [\n        {\n          \"from\": \"null\",\n          \"text\": \"N/A\",\n\
+    \          \"to\": \"null\"\n        }\n      ],\n      \"sparkline\": {\n   \
+    \     \"fillColor\": \"rgb(105, 34, 43)\",\n        \"full\": false,\n       \
+    \ \"lineColor\": \"#C4162A\",\n        \"show\": true,\n        \"ymax\": null,\n\
+    \        \"ymin\": null\n      },\n      \"tableColumn\": \"{}\",\n      \"targets\"\
+    : [\n        {\n          \"expr\": \"sum(count_over_time(({container_name=\\\"\
+    $container_name\\\", stream=~\\\"$stream\\\", pod_name=~\\\"$pod_name\\\"} |~\
+    \ \\\"(?i)$searchable_pattern\\\")[$__interval]))\",\n          \"hide\": false,\n\
+    \          \"refId\": \"A\"\n        }\n      ],\n      \"thresholds\": \"10,50\"\
+    ,\n      \"timeFrom\": null,\n      \"timeShift\": null,\n      \"title\": \"\
+    Total Count: of $searchable_pattern\",\n      \"type\": \"singlestat\",\n    \
+    \  \"valueFontSize\": \"70%\",\n      \"valueMaps\": [\n        {\n          \"\
+    $$hashKey\": \"object:1633\",\n          \"op\": \"=\",\n          \"text\": \"\
+    0\",\n          \"value\": \"null\"\n        }\n      ],\n      \"valueName\"\
+    : \"total\"\n    },\n    {\n      \"datasource\": \"Loki\",\n      \"description\"\
+    : \"Live logs is a like 'tail -f' in a real time\",\n      \"fieldConfig\": {\n\
+    \        \"defaults\": {\n          \"custom\": {}\n        },\n        \"overrides\"\
+    : []\n      },\n      \"gridPos\": {\n        \"h\": 9,\n        \"w\": 24,\n\
+    \        \"x\": 0,\n        \"y\": 3\n      },\n      \"id\": 2,\n      \"options\"\
+    : {\n        \"showLabels\": true,\n        \"showTime\": false,\n        \"sortOrder\"\
+    : \"Descending\",\n        \"wrapLogMessage\": false\n      },\n      \"targets\"\
+    : [\n        {\n          \"expr\": \"{container_name=\\\"$container_name\\\"\
+    , pod_name=~\\\"$pod_name\\\", stream=~\\\"$stream\\\"} |~ \\\"(?i)$searchable_pattern\\\
+    \" \",\n          \"hide\": false,\n          \"refId\": \"A\"\n        }\n  \
+    \    ],\n      \"timeFrom\": null,\n      \"timeShift\": null,\n      \"title\"\
+    : \"Live logs\",\n      \"type\": \"logs\"\n    },\n    {\n      \"content\":\
+    \ \"\",\n      \"datasource\": \"${DS_NY-ALERTING2}\",\n      \"fieldConfig\"\
+    : {\n        \"defaults\": {\n          \"custom\": {}\n        },\n        \"\
+    overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 2,\n        \"\
+    w\": 24,\n        \"x\": 0,\n        \"y\": 12\n      },\n      \"id\": 15,\n\
+    \      \"mode\": \"html\",\n      \"options\": {\n        \"content\": \"\",\n\
+    \        \"mode\": \"html\"\n      },\n      \"pluginVersion\": \"7.1.0\",\n \
+    \     \"targets\": [\n        {\n          \"refId\": \"A\",\n          \"target\"\
+    : \"\"\n        }\n      ],\n      \"timeFrom\": null,\n      \"timeShift\": null,\n\
+    \      \"title\": \"\",\n      \"type\": \"text\"\n    },\n    {\n      \"cacheTimeout\"\
+    : null,\n      \"datasource\": \"Loki\",\n      \"fieldConfig\": {\n        \"\
+    defaults\": {\n          \"custom\": {},\n          \"mappings\": [\n        \
+    \    {\n              \"id\": 0,\n              \"op\": \"=\",\n             \
+    \ \"text\": \"0\",\n              \"type\": 1,\n              \"value\": \"null\"\
+    \n            }\n          ],\n          \"nullValueMode\": \"connected\",\n \
+    \         \"thresholds\": {\n            \"mode\": \"absolute\",\n           \
+    \ \"steps\": [\n              {\n                \"color\": \"#299c46\",\n   \
+    \             \"value\": null\n              },\n              {\n           \
+    \     \"color\": \"rgba(237, 129, 40, 0.89)\",\n                \"value\": 10\n\
+    \              },\n              {\n                \"color\": \"#C4162A\",\n\
+    \                \"value\": 50\n              }\n            ]\n          },\n\
+    \          \"unit\": \"none\"\n        },\n        \"overrides\": []\n      },\n\
+    \      \"gridPos\": {\n        \"h\": 7,\n        \"w\": 7,\n        \"x\": 0,\n\
+    \        \"y\": 14\n      },\n      \"id\": 19,\n      \"interval\": null,\n \
+    \     \"links\": [],\n      \"maxDataPoints\": 100,\n      \"options\": {\n  \
+    \      \"reduceOptions\": {\n          \"calcs\": [\n            \"mean\"\n  \
+    \        ],\n          \"fields\": \"\",\n          \"values\": false\n      \
+    \  },\n        \"showThresholdLabels\": false,\n        \"showThresholdMarkers\"\
+    : true\n      },\n      \"pluginVersion\": \"7.1.1\",\n      \"targets\": [\n\
+    \        {\n          \"expr\": \"sum(count_over_time(({container_name=\\\"$container_name\\\
+    \", pod_name=~\\\"$pod_name\\\"})[$__interval])) by (stream)\",\n          \"\
+    hide\": false,\n          \"refId\": \"A\"\n        }\n      ],\n      \"timeFrom\"\
+    : null,\n      \"timeShift\": null,\n      \"title\": \"Total count of stderr\
+    \ / stdout pie\",\n      \"type\": \"gauge\"\n    },\n    {\n      \"aliasColors\"\
+    : {},\n      \"bars\": false,\n      \"cacheTimeout\": null,\n      \"dashLength\"\
+    : 10,\n      \"dashes\": false,\n      \"datasource\": \"Loki\",\n      \"fieldConfig\"\
+    : {\n        \"defaults\": {\n          \"custom\": {\n            \"align\":\
+    \ null\n          },\n          \"mappings\": [],\n          \"thresholds\": {\n\
+    \            \"mode\": \"absolute\",\n            \"steps\": [\n             \
+    \ {\n                \"color\": \"green\",\n                \"value\": null\n\
+    \              },\n              {\n                \"color\": \"red\",\n    \
+    \            \"value\": 80\n              }\n            ]\n          }\n    \
+    \    },\n        \"overrides\": []\n      },\n      \"fill\": 1,\n      \"fillGradient\"\
+    : 0,\n      \"gridPos\": {\n        \"h\": 7,\n        \"w\": 12,\n        \"\
+    x\": 7,\n        \"y\": 14\n      },\n      \"hiddenSeries\": false,\n      \"\
+    id\": 20,\n      \"interval\": \"1m\",\n      \"legend\": {\n        \"avg\":\
+    \ false,\n        \"current\": false,\n        \"max\": false,\n        \"min\"\
+    : false,\n        \"show\": true,\n        \"total\": false,\n        \"values\"\
+    : false\n      },\n      \"lines\": true,\n      \"linewidth\": 1,\n      \"links\"\
+    : [],\n      \"maxDataPoints\": \"\",\n      \"nullPointMode\": \"null\",\n  \
+    \    \"percentage\": false,\n      \"pluginVersion\": \"7.1.1\",\n      \"pointradius\"\
+    : 2,\n      \"points\": false,\n      \"renderer\": \"flot\",\n      \"seriesOverrides\"\
+    : [],\n      \"spaceLength\": 10,\n      \"stack\": false,\n      \"steppedLine\"\
+    : false,\n      \"targets\": [\n        {\n          \"expr\": \"sum(count_over_time(({container_name=\\\
+    \"$container_name\\\", pod_name=~\\\"$pod_name\\\", stream=~\\\"$stream\\\"} |~\
+    \ \\\"(?i)$searchable_pattern\\\")[$__interval])) by (pod_name)\",\n         \
+    \ \"refId\": \"A\"\n        }\n      ],\n      \"thresholds\": [],\n      \"timeFrom\"\
+    : null,\n      \"timeRegions\": [],\n      \"timeShift\": null,\n      \"title\"\
+    : \"Matched word: \\\"$searchable_pattern\\\" donut\",\n      \"tooltip\": {\n\
+    \        \"shared\": true,\n        \"sort\": 0,\n        \"value_type\": \"individual\"\
+    \n      },\n      \"type\": \"graph\",\n      \"xaxis\": {\n        \"buckets\"\
+    : null,\n        \"mode\": \"time\",\n        \"name\": null,\n        \"show\"\
+    : true,\n        \"values\": []\n      },\n      \"yaxes\": [\n        {\n   \
+    \       \"format\": \"short\",\n          \"label\": null,\n          \"logBase\"\
+    : 1,\n          \"max\": null,\n          \"min\": null,\n          \"show\":\
+    \ true\n        },\n        {\n          \"format\": \"short\",\n          \"\
+    label\": null,\n          \"logBase\": 1,\n          \"max\": null,\n        \
+    \  \"min\": null,\n          \"show\": true\n        }\n      ],\n      \"yaxis\"\
+    : {\n        \"align\": false,\n        \"alignLevel\": null\n      }\n    },\n\
+    \    {\n      \"cacheTimeout\": null,\n      \"datasource\": \"Loki\",\n     \
+    \ \"fieldConfig\": {\n        \"defaults\": {\n          \"custom\": {},\n   \
+    \       \"mappings\": [\n            {\n              \"id\": 0,\n           \
+    \   \"op\": \"=\",\n              \"text\": \"0\",\n              \"type\": 1,\n\
+    \              \"value\": \"null\"\n            }\n          ],\n          \"\
+    max\": 100,\n          \"min\": 0,\n          \"noValue\": \"0\",\n          \"\
+    nullValueMode\": \"connected\",\n          \"thresholds\": {\n            \"mode\"\
+    : \"absolute\",\n            \"steps\": [\n              {\n                \"\
+    color\": \"#299c46\",\n                \"value\": null\n              },\n   \
+    \           {\n                \"color\": \"rgba(237, 129, 40, 0.89)\",\n    \
+    \            \"value\": 10\n              },\n              {\n              \
+    \  \"color\": \"#C4162A\",\n                \"value\": 50\n              }\n \
+    \           ]\n          },\n          \"unit\": \"percent\"\n        },\n   \
+    \     \"overrides\": []\n      },\n      \"gridPos\": {\n        \"h\": 7,\n \
+    \       \"w\": 5,\n        \"x\": 19,\n        \"y\": 14\n      },\n      \"id\"\
+    : 9,\n      \"interval\": null,\n      \"links\": [],\n      \"maxDataPoints\"\
+    : 100,\n      \"options\": {\n        \"orientation\": \"auto\",\n        \"reduceOptions\"\
+    : {\n          \"calcs\": [\n            \"mean\"\n          ],\n          \"\
+    fields\": \"\",\n          \"values\": false\n        },\n        \"showThresholdLabels\"\
+    : false,\n        \"showThresholdMarkers\": false\n      },\n      \"pluginVersion\"\
+    : \"7.1.1\",\n      \"targets\": [\n        {\n          \"expr\": \"sum(count_over_time(({container_name=\\\
+    \"$container_name\\\", stream=~\\\"$stream\\\", pod_name=~\\\"$pod_name\\\"} |~\
+    \ \\\"(?i)$searchable_pattern\\\")[$__interval])) * 100 / sum(count_over_time(({container_name=\\\
+    \"$container_name\\\", stream=~\\\"$stream\\\", pod_name=~\\\"$pod_name\\\"})[$__interval]))\"\
+    ,\n          \"hide\": false,\n          \"refId\": \"A\"\n        }\n      ],\n\
+    \      \"timeFrom\": null,\n      \"timeShift\": null,\n      \"title\": \"\\\"\
+    $searchable_pattern\\\" Percentage for specified time\",\n      \"type\": \"gauge\"\
+    \n    },\n    {\n      \"aliasColors\": {},\n      \"bars\": true,\n      \"cacheTimeout\"\
+    : null,\n      \"dashLength\": 10,\n      \"dashes\": false,\n      \"datasource\"\
+    : \"Loki\",\n      \"decimals\": 0,\n      \"fieldConfig\": {\n        \"defaults\"\
+    : {\n          \"custom\": {},\n          \"links\": []\n        },\n        \"\
+    overrides\": []\n      },\n      \"fill\": 1,\n      \"fillGradient\": 1,\n  \
+    \    \"gridPos\": {\n        \"h\": 9,\n        \"w\": 12,\n        \"x\": 0,\n\
+    \        \"y\": 21\n      },\n      \"hiddenSeries\": false,\n      \"id\": 18,\n\
+    \      \"interval\": \"1m\",\n      \"legend\": {\n        \"alignAsTable\": true,\n\
+    \        \"avg\": false,\n        \"current\": true,\n        \"hideEmpty\": false,\n\
+    \        \"hideZero\": false,\n        \"max\": false,\n        \"min\": false,\n\
+    \        \"rightSide\": false,\n        \"show\": true,\n        \"sort\": \"\
+    current\",\n        \"sortDesc\": true,\n        \"total\": false,\n        \"\
+    values\": true\n      },\n      \"lines\": false,\n      \"linewidth\": 3,\n \
+    \     \"links\": [],\n      \"maxDataPoints\": \"\",\n      \"nullPointMode\"\
+    : \"null\",\n      \"percentage\": false,\n      \"pluginVersion\": \"7.1.1\"\
+    ,\n      \"pointradius\": 2,\n      \"points\": false,\n      \"renderer\": \"\
+    flot\",\n      \"seriesOverrides\": [],\n      \"spaceLength\": 10,\n      \"\
+    stack\": false,\n      \"steppedLine\": false,\n      \"targets\": [\n       \
+    \ {\n          \"expr\": \"sum(count_over_time(({container_name=\\\"$container_name\\\
+    \", pod_name=~\\\"$pod_name\\\", stream=~\\\"$stream\\\"} |~ \\\"(?i)$searchable_pattern\\\
+    \")[$__interval])) by (pod_name)\",\n          \"refId\": \"A\"\n        }\n \
+    \     ],\n      \"thresholds\": [],\n      \"timeFrom\": null,\n      \"timeRegions\"\
+    : [],\n      \"timeShift\": null,\n      \"title\": \"Matched word: \\\"$searchable_pattern\\\
+    \" historical\",\n      \"tooltip\": {\n        \"shared\": true,\n        \"\
+    sort\": 2,\n        \"value_type\": \"individual\"\n      },\n      \"type\":\
+    \ \"graph\",\n      \"xaxis\": {\n        \"buckets\": null,\n        \"mode\"\
+    : \"time\",\n        \"name\": null,\n        \"show\": true,\n        \"values\"\
+    : []\n      },\n      \"yaxes\": [\n        {\n          \"$$hashKey\": \"object:425\"\
+    ,\n          \"decimals\": 0,\n          \"format\": \"short\",\n          \"\
+    label\": \"Count\",\n          \"logBase\": 1,\n          \"max\": null,\n   \
+    \       \"min\": null,\n          \"show\": true\n        },\n        {\n    \
+    \      \"$$hashKey\": \"object:426\",\n          \"format\": \"short\",\n    \
+    \      \"label\": null,\n          \"logBase\": 1,\n          \"max\": null,\n\
+    \          \"min\": null,\n          \"show\": false\n        }\n      ],\n  \
+    \    \"yaxis\": {\n        \"align\": false,\n        \"alignLevel\": null\n \
+    \     }\n    },\n    {\n      \"aliasColors\": {},\n      \"bars\": false,\n \
+    \     \"cacheTimeout\": null,\n      \"dashLength\": 10,\n      \"dashes\": false,\n\
+    \      \"datasource\": \"Loki\",\n      \"fieldConfig\": {\n        \"defaults\"\
+    : {\n          \"custom\": {},\n          \"links\": []\n        },\n        \"\
+    overrides\": []\n      },\n      \"fill\": 1,\n      \"fillGradient\": 10,\n \
+    \     \"gridPos\": {\n        \"h\": 9,\n        \"w\": 12,\n        \"x\": 12,\n\
+    \        \"y\": 21\n      },\n      \"hiddenSeries\": false,\n      \"id\": 10,\n\
+    \      \"interval\": null,\n      \"legend\": {\n        \"alignAsTable\": true,\n\
+    \        \"avg\": false,\n        \"current\": false,\n        \"max\": false,\n\
+    \        \"min\": false,\n        \"rightSide\": false,\n        \"show\": true,\n\
+    \        \"total\": false,\n        \"values\": false\n      },\n      \"lines\"\
+    : true,\n      \"linewidth\": 1,\n      \"links\": [],\n      \"maxDataPoints\"\
+    : 100,\n      \"nullPointMode\": \"null\",\n      \"percentage\": false,\n   \
+    \   \"pluginVersion\": \"7.1.1\",\n      \"pointradius\": 0.5,\n      \"points\"\
+    : false,\n      \"renderer\": \"flot\",\n      \"seriesOverrides\": [],\n    \
+    \  \"spaceLength\": 10,\n      \"stack\": false,\n      \"steppedLine\": false,\n\
+    \      \"targets\": [\n        {\n          \"expr\": \"sum(rate(({container_name=\\\
+    \"$container_name\\\", stream=~\\\"$stream\\\", pod_name=~\\\"$pod_name\\\"} |~\
+    \ \\\"(?i)$searchable_pattern\\\")[30s])) by (pod_name)\",\n          \"hide\"\
+    : false,\n          \"refId\": \"A\"\n        }\n      ],\n      \"thresholds\"\
+    : [],\n      \"timeFrom\": null,\n      \"timeRegions\": [],\n      \"timeShift\"\
+    : null,\n      \"title\": \"\\\"$searchable_pattern\\\" Rate per Pod\",\n    \
+    \  \"tooltip\": {\n        \"shared\": true,\n        \"sort\": 2,\n        \"\
+    value_type\": \"individual\"\n      },\n      \"type\": \"graph\",\n      \"xaxis\"\
+    : {\n        \"buckets\": null,\n        \"mode\": \"time\",\n        \"name\"\
+    : null,\n        \"show\": true,\n        \"values\": []\n      },\n      \"yaxes\"\
+    : [\n        {\n          \"$$hashKey\": \"object:2804\",\n          \"format\"\
+    : \"short\",\n          \"label\": null,\n          \"logBase\": 10,\n       \
+    \   \"max\": null,\n          \"min\": null,\n          \"show\": true\n     \
+    \   },\n        {\n          \"$$hashKey\": \"object:2805\",\n          \"format\"\
+    : \"short\",\n          \"label\": null,\n          \"logBase\": 1,\n        \
+    \  \"max\": null,\n          \"min\": null,\n          \"show\": true\n      \
+    \  }\n      ],\n      \"yaxis\": {\n        \"align\": false,\n        \"alignLevel\"\
+    : null\n      }\n    },\n    {\n      \"aliasColors\": {},\n      \"bars\": false,\n\
+    \      \"cacheTimeout\": null,\n      \"dashLength\": 10,\n      \"dashes\": false,\n\
+    \      \"datasource\": \"Loki\",\n      \"fieldConfig\": {\n        \"defaults\"\
+    : {\n          \"custom\": {},\n          \"links\": []\n        },\n        \"\
+    overrides\": []\n      },\n      \"fill\": 2,\n      \"fillGradient\": 4,\n  \
+    \    \"gridPos\": {\n        \"h\": 8,\n        \"w\": 24,\n        \"x\": 0,\n\
+    \        \"y\": 30\n      },\n      \"hiddenSeries\": false,\n      \"id\": 7,\n\
+    \      \"interval\": null,\n      \"legend\": {\n        \"alignAsTable\": false,\n\
+    \        \"avg\": false,\n        \"current\": false,\n        \"max\": false,\n\
+    \        \"min\": false,\n        \"rightSide\": false,\n        \"show\": true,\n\
+    \        \"total\": false,\n        \"values\": false\n      },\n      \"lines\"\
+    : true,\n      \"linewidth\": 1,\n      \"links\": [],\n      \"maxDataPoints\"\
+    : 100,\n      \"nullPointMode\": \"null\",\n      \"percentage\": false,\n   \
+    \   \"pluginVersion\": \"7.1.1\",\n      \"pointradius\": 2,\n      \"points\"\
+    : true,\n      \"renderer\": \"flot\",\n      \"seriesOverrides\": [\n       \
+    \ {\n          \"$$hashKey\": \"object:154\",\n          \"alias\": \"{stream=\\\
+    \"stderr\\\"} stderr\",\n          \"color\": \"#C4162A\",\n          \"legend\"\
+    : false,\n          \"linewidth\": 2\n        },\n        {\n          \"$$hashKey\"\
+    : \"object:220\",\n          \"alias\": \"{stream=\\\"stdout\\\"} stdout\",\n\
+    \          \"color\": \"#56A64B\",\n          \"legend\": false,\n          \"\
+    linewidth\": 2\n        }\n      ],\n      \"spaceLength\": 10,\n      \"stack\"\
+    : false,\n      \"steppedLine\": false,\n      \"targets\": [\n        {\n   \
+    \       \"expr\": \"sum(count_over_time(({container_name=\\\"$container_name\\\
+    \", pod_name=~\\\"$pod_name\\\"})[$__interval])) by (stream)\",\n          \"\
+    hide\": false,\n          \"refId\": \"A\"\n        }\n      ],\n      \"thresholds\"\
+    : [],\n      \"timeFrom\": null,\n      \"timeRegions\": [],\n      \"timeShift\"\
+    : null,\n      \"title\": \"Count of stderr / stdout historical\",\n      \"tooltip\"\
+    : {\n        \"shared\": true,\n        \"sort\": 2,\n        \"value_type\":\
+    \ \"individual\"\n      },\n      \"type\": \"graph\",\n      \"xaxis\": {\n \
+    \       \"buckets\": null,\n        \"mode\": \"time\",\n        \"name\": null,\n\
+    \        \"show\": true,\n        \"values\": []\n      },\n      \"yaxes\": [\n\
+    \        {\n          \"$$hashKey\": \"object:188\",\n          \"format\": \"\
+    short\",\n          \"label\": null,\n          \"logBase\": 1,\n          \"\
+    max\": null,\n          \"min\": null,\n          \"show\": true\n        },\n\
+    \        {\n          \"$$hashKey\": \"object:189\",\n          \"format\": \"\
+    short\",\n          \"label\": \"\",\n          \"logBase\": 1,\n          \"\
+    max\": null,\n          \"min\": null,\n          \"show\": true\n        }\n\
+    \      ],\n      \"yaxis\": {\n        \"align\": false,\n        \"alignLevel\"\
+    : null\n      }\n    }\n  ],\n  \"refresh\": \"5s\",\n  \"schemaVersion\": 26,\n\
+    \  \"style\": \"dark\",\n  \"tags\": [\n    \"Loki\",\n    \"logging\"\n  ],\n\
+    \  \"templating\": {\n    \"list\": [\n      {\n        \"allValue\": null,\n\
+    \        \"current\": {\n          \"selected\": false,\n          \"text\": \"\
+    coredns\",\n          \"value\": \"coredns\"\n        },\n        \"datasource\"\
+    : \"Loki\",\n        \"definition\": \"label_values({container_name=~\\\".+\\\"\
+    }, container_name)\",\n        \"hide\": 0,\n        \"includeAll\": true,\n \
+    \       \"label\": \"Service\",\n        \"multi\": false,\n        \"name\":\
+    \ \"container_name\",\n        \"options\": [],\n        \"query\": \"label_values({container_name=~\\\
+    \".+\\\"}, container_name)\",\n        \"refresh\": 2,\n        \"regex\": \"\"\
+    ,\n        \"skipUrlSync\": false,\n        \"sort\": 0,\n        \"tagValuesQuery\"\
+    : \"\",\n        \"tags\": [],\n        \"tagsQuery\": \"\",\n        \"type\"\
+    : \"query\",\n        \"useTags\": false\n      },\n      {\n        \"allValue\"\
+    : null,\n        \"current\": {\n          \"selected\": false,\n          \"\
+    text\": \"All\",\n          \"value\": \"$__all\"\n        },\n        \"datasource\"\
+    : \"Loki\",\n        \"definition\": \"label_values({container_name=\\\"$container_name\\\
+    \"}, pod_name)\",\n        \"hide\": 0,\n        \"includeAll\": true,\n     \
+    \   \"label\": \"Pod\",\n        \"multi\": false,\n        \"name\": \"pod_name\"\
+    ,\n        \"options\": [],\n        \"query\": \"label_values({container_name=\\\
+    \"$container_name\\\"}, pod_name)\",\n        \"refresh\": 2,\n        \"regex\"\
+    : \"$container_name.*\",\n        \"skipUrlSync\": false,\n        \"sort\": 0,\n\
+    \        \"tagValuesQuery\": \"\",\n        \"tags\": [],\n        \"tagsQuery\"\
+    : \"\",\n        \"type\": \"query\",\n        \"useTags\": false\n      },\n\
+    \      {\n        \"allValue\": null,\n        \"current\": {\n          \"selected\"\
+    : false,\n          \"text\": \"All\",\n          \"value\": \"$__all\"\n    \
+    \    },\n        \"datasource\": \"Loki\",\n        \"definition\": \"label_values({container_name=\\\
+    \"$container_name\\\"}, stream)\",\n        \"hide\": 0,\n        \"includeAll\"\
+    : true,\n        \"label\": \"Stream\",\n        \"multi\": false,\n        \"\
+    name\": \"stream\",\n        \"options\": [],\n        \"query\": \"label_values({container_name=\\\
+    \"$container_name\\\"}, stream)\",\n        \"refresh\": 2,\n        \"regex\"\
+    : \"\",\n        \"skipUrlSync\": false,\n        \"sort\": 0,\n        \"tagValuesQuery\"\
+    : \"\",\n        \"tags\": [],\n        \"tagsQuery\": \"\",\n        \"type\"\
+    : \"query\",\n        \"useTags\": false\n      },\n      {\n        \"allValue\"\
+    : null,\n        \"current\": {\n          \"selected\": true,\n          \"text\"\
+    : \"All\",\n          \"value\": \"$__all\"\n        },\n        \"datasource\"\
+    : \"Loki\",\n        \"definition\": \"label_values({namespace=~\\\".+\\\"}, namespace)\"\
+    ,\n        \"hide\": 0,\n        \"includeAll\": true,\n        \"label\": \"\
+    namespace\",\n        \"multi\": false,\n        \"name\": \"namespace\",\n  \
+    \      \"options\": [\n          {\n            \"selected\": true,\n        \
+    \    \"text\": \"All\",\n            \"value\": \"$__all\"\n          },\n   \
+    \       {\n            \"selected\": false,\n            \"text\": \"kube-system\"\
+    ,\n            \"value\": \"kube-system\"\n          },\n          {\n       \
+    \     \"selected\": false,\n            \"text\": \"kyverno\",\n            \"\
+    value\": \"kyverno\"\n          },\n          {\n            \"selected\": false,\n\
+    \            \"text\": \"loki-stack\",\n            \"value\": \"loki-stack\"\n\
+    \          },\n          {\n            \"selected\": false,\n            \"text\"\
+    : \"nirmata\",\n            \"value\": \"nirmata\"\n          }\n        ],\n\
+    \        \"query\": \"label_values({namespace=~\\\".+\\\"}, namespace)\",\n  \
+    \      \"refresh\": 0,\n        \"regex\": \"\",\n        \"skipUrlSync\": false,\n\
+    \        \"sort\": 0,\n        \"tagValuesQuery\": \"\",\n        \"tags\": [],\n\
+    \        \"tagsQuery\": \"\",\n        \"type\": \"query\",\n        \"useTags\"\
+    : false\n      },\n      {\n        \"current\": {\n          \"selected\": false,\n\
+    \          \"text\": \"error\",\n          \"value\": \"error\"\n        },\n\
+    \        \"hide\": 0,\n        \"label\": \"Search (case insensitive)\",\n   \
+    \     \"name\": \"searchable_pattern\",\n        \"options\": [\n          {\n\
+    \            \"selected\": true,\n            \"text\": \"\",\n            \"\
+    value\": \"\"\n          }\n        ],\n        \"query\": \"\",\n        \"skipUrlSync\"\
+    : false,\n        \"type\": \"textbox\"\n      }\n    ]\n  },\n  \"time\": {\n\
+    \    \"from\": \"now-30m\",\n    \"to\": \"now\"\n  },\n  \"timepicker\": {\n\
+    \    \"refresh_intervals\": [\n      \"10s\",\n      \"30s\",\n      \"1m\",\n\
+    \      \"5m\",\n      \"15m\",\n      \"30m\",\n      \"1h\",\n      \"2h\",\n\
+    \      \"1d\"\n    ]\n  },\n  \"timezone\": \"\",\n  \"title\": \"Loki dashboard\"\
+    ,\n  \"uid\": \"fRIvzUZMz\",\n  \"version\": 8\n}"
+binaryData: {}
+metadata:
+  annotations: {}
+  name: "loki-dashboard"
+  labels:
+    app.kubernetes.io/name: "loki-cat-2"
+    grafana_dashboard: "1"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1beta1"
+kind: "Role"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+
+---
+apiVersion: "apps/v1"
+kind: "DaemonSet"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki-promtail"
+  labels:
+    app: "promtail"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "promtail-0.24.0"
+    app.kubernetes.io/component: "daemonset.loki-promtail"
+spec:
+  minReadySeconds: 0
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: "promtail"
+      release: "loki"
+      app.kubernetes.io/component: "daemonset.loki-promtail"
+    matchExpressions: []
+  template:
+    metadata:
+      annotations:
+        prometheus.io/port: "http-metrics"
+        prometheus.io/scrape: "true"
+      labels:
+        app: "promtail"
+        release: "loki"
+        app.kubernetes.io/component: "daemonset.loki-promtail"
+    spec:
+      terminationGracePeriodSeconds: 30
+      nodeSelector: {}
+      serviceAccountName: "loki-promtail"
+      volumes:
+      - name: "config"
+        configMap:
+          name: "loki-promtail"
+      - name: "run"
+        hostPath:
+          path: "/run/promtail"
+      - name: "docker"
+        hostPath:
+          path: "/var/lib/docker/containers"
+      - name: "pods"
+        hostPath:
+          path: "/var/log/pods"
+      containers:
+      - name: "promtail"
+        image: "grafana/promtail:1.6.0"
+        command: []
+        args:
+        - "-config.file=/etc/promtail/promtail.yaml"
+        - "-client.url=http://loki:3100/loki/api/v1/push"
+        imagePullPolicy: "IfNotPresent"
+        ports:
+        - name: "http-metrics"
+          containerPort: 3101
+          protocol: "TCP"
+        env:
+        - name: "HOSTNAME"
+          valueFrom:
+            fieldRef:
+              apiVersion: "v1"
+              fieldPath: "spec.nodeName"
+        volumeMounts:
+        - name: "config"
+          mountPath: "/etc/promtail"
+        - name: "run"
+          mountPath: "/run/promtail"
+        - name: "docker"
+          readOnly: true
+          mountPath: "/var/lib/docker/containers"
+        - name: "pods"
+          readOnly: true
+          mountPath: "/var/log/pods"
+        readinessProbe:
+          initialDelaySeconds: 10
+          timeoutSeconds: 1
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 5
+          httpGet:
+            path: "/ready"
+            port: "http-metrics"
+        securityContext:
+          runAsUser: 0
+          readOnlyRootFilesystem: true
+          runAsGroup: 0
+      tolerations:
+      - key: "node-role.kubernetes.io/master"
+        operator: "Exists"
+        effect: "NoSchedule"
+  updateStrategy:
+    type: "RollingUpdate"
+    rollingUpdate:
+      maxUnavailable: 1
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1beta1"
+kind: "RoleBinding"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "grafana"
+subjects:
+- kind: "ServiceAccount"
+  name: "grafana"
+  namespace: "loki-stack"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRole"
+rules:
+- apiGroups:
+  - ""
+  nonResourceURLs: []
+  resourceNames: []
+  resources:
+  - "nodes"
+  - "nodes/proxy"
+  - "services"
+  - "endpoints"
+  - "pods"
+  verbs:
+  - "get"
+  - "watch"
+  - "list"
+metadata:
+  annotations: {}
+  name: "loki-promtail-clusterrole"
+  labels:
+    app: "promtail"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "promtail-0.24.0"
+    release: "loki"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  annotations: {}
+  name: "grafana-clusterrolebinding"
+  labels:
+    app: "grafana"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "grafana-3.8.19"
+    release: "loki"
+subjects:
+- kind: "ServiceAccount"
+  name: "grafana"
+  namespace: "loki-stack"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "grafana-clusterrole"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "Role"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "loki-0.31.0"
+    release: "loki"
+rules:
+- apiGroups:
+  - "extensions"
+  nonResourceURLs: []
+  resourceNames:
+  - "loki"
+  resources:
+  - "podsecuritypolicies"
+  verbs:
+  - "use"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "RoleBinding"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "loki-0.31.0"
+    release: "loki"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "Role"
+  name: "loki"
+subjects:
+- kind: "ServiceAccount"
+  name: "loki"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "loki"
+  labels:
+    app: "loki"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "loki-0.31.0"
+    app.kubernetes.io/component: "statefulset.loki"
+spec:
+  clusterIP: "None"
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  type: "ClusterIP"
+  selector:
+    app: "loki"
+    release: "loki"
+    app.kubernetes.io/component: "statefulset.loki"
+  ports:
+  - name: "http-metrics"
+    port: 3100
+    protocol: "TCP"
+    targetPort: "http-metrics"
+
+---
+apiVersion: "rbac.authorization.k8s.io/v1"
+kind: "ClusterRoleBinding"
+metadata:
+  annotations: {}
+  name: "loki-promtail-clusterrolebinding"
+  labels:
+    app: "promtail"
+    heritage: "Tiller"
+    app.kubernetes.io/name: "loki-cat-2"
+    chart: "promtail-0.24.0"
+    release: "loki"
+subjects:
+- kind: "ServiceAccount"
+  name: "loki-promtail"
+  namespace: "loki-stack"
+roleRef:
+  apiGroup: "rbac.authorization.k8s.io"
+  kind: "ClusterRole"
+  name: "loki-promtail-clusterrole"
+
+---
+apiVersion: "v1"
+kind: "Service"
+metadata:
+  namespace: "loki-stack"
+  annotations: {}
+  name: "grafana"
+  labels:
+    app: "grafana"
+    app.kubernetes.io/name: "loki-cat-2"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "grafana-3.8.19"
+    app.kubernetes.io/component: "deployment.grafana"
+spec:
+  externalIPs: []
+  loadBalancerSourceRanges: []
+  type: "ClusterIP"
+  selector:
+    app: "grafana"
+    release: "loki"
+    app.kubernetes.io/component: "deployment.grafana"
+  ports:
+  - name: "service"
+    port: 80
+    protocol: "TCP"
+    targetPort: 3000
+
+---
+metadata:
+  name: "loki-promtail"
+  labels:
+    app: "promtail"
+    release: "loki"
+    heritage: "Tiller"
+    chart: "promtail-0.24.0"
+apiVersion: "policy/v1beta1"
+kind: "PodSecurityPolicy"
+spec:
+  privileged: false
+  runAsUser:
+    rule: "RunAsAny"
+  seLinux:
+    rule: "RunAsAny"
+  fsGroup:
+    rule: "RunAsAny"
+  hostNetwork: false
+  volumes:
+  - "secret"
+  - "configMap"
+  - "hostPath"
+  - "projected"
+  - "downwardAPI"
+  - "emptyDir"
+  hostIPC: false
+  supplementalGroups:
+    rule: "RunAsAny"
+  requiredDropCapabilities:
+  - "ALL"
+  allowPrivilegeEscalation: false
+  hostPID: false
+  readOnlyRootFilesystem: true
