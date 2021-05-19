@@ -14,7 +14,7 @@ Loki is built around the idea of only indexing metadata about your logs: labels 
 3. Edit the catalog application and select an add-on category (e.g. Logging). This is required to select the application as an add-on.
 4. Update a Cluster Type, or create a new one, and select the loki-stack add-on application in the "Add-Ons" section.Ensure that the namespace you use is "**loki-stack**"
 5. Create clusters using the cluster type.
-6. If the addon is to be added to a running cluster, create an environment with the name "**loki-stack**" and choose this environment while deploying the application
+6. If the addon is to be added to a running cluster, create an namespace with the name "**loki-stack**" and choose this environment while deploying the application
 7. Verify that the application is running in Nirmata. 
 8. Access the Grafana dashboard on the exposed node port, the secret "grafana" holds the credentials to access the application.
 
