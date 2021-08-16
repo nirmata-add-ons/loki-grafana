@@ -123,8 +123,8 @@ metadata:
   annotations: {}
   name: "loki"
   labels:
-    app: "loki-2"
-    app.kubernetes.io/name: "loki-cat"
+    app: "loki"
+    app.kubernetes.io/name: "loki-cat-2"
     release: "loki"
     heritage: "Tiller"
     chart: "loki-0.31.0"
